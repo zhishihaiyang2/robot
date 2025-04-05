@@ -41,13 +41,24 @@ export default function Chat() {
     setIsLoading(true);
 
     try {
-      // 模拟API调用延迟
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: inputText }),
+      });
+
+      if (!response.ok) {
+        throw new Error('API请求失败');
+      }
+
+      const data = await response.json();
 
       // 添加机器人回复
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: `这是对"${inputText}"的回复。在实际应用中，这里应该调用真实的API。`,
+        text: data.reply,
         sender: 'bot',
         timestamp: new Date(),
       };
@@ -55,6 +66,14 @@ export default function Chat() {
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
       console.error('发送消息失败:', error);
+      // 添加错误消息
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        text: '抱歉，处理您的消息时出现错误。请稍后重试。',
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
